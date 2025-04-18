@@ -26,9 +26,9 @@
 #include "GlobalDef.h"
 
 /* HP-Socket 版本号 */
-#define HP_VERSION_MAJOR	6	// 主版本号
-#define HP_VERSION_MINOR	0	// 子版本号
-#define HP_VERSION_REVISE	3	// 修正版本号
+#define HP_VERSION_MAJOR	5	// 主版本号
+#define HP_VERSION_MINOR	9	// 子版本号
+#define HP_VERSION_REVISE	6	// 修正版本号
 #define HP_VERSION_BUILD	1	// 构建编号
 
 //#define _UDP_DISABLED			// 禁用 UDP
@@ -204,7 +204,6 @@ typedef enum EnSocketError
 	SE_NETWORK					= 12,		// 网络错误
 	SE_DATA_PROC				= 13,		// 数据处理错误
 	SE_DATA_SEND				= 14,		// 数据发送失败
-	SE_GC_START					= 15,		// 垃圾回收启动失败
 
 	/***** SSL Socket 扩展操作结果代码 *****/
 	SE_SSL_ENV_NOT_READY		= 101,		// SSL 环境未就绪

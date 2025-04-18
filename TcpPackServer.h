@@ -114,6 +114,8 @@ protected:
 
 	virtual BOOL BeforeUnpause(TSocketObj* pSocketObj)
 	{
+		CReentrantCriSecLock locallock(pSocketObj->csIo);
+
 		if(!TSocketObj::IsValid(pSocketObj))
 			return FALSE;
 
@@ -153,15 +155,6 @@ protected:
 		m_bfPool.SetBufferPoolHold	(GetFreeSocketObjHold());
 
 		m_bfPool.Prepare();
-	}
-
-	virtual void ReleaseGCSocketObj(BOOL bForce = FALSE)
-	{
-		__super::ReleaseGCSocketObj(bForce);
-
-#ifdef USE_EXTERNAL_GC
-		m_bfPool.ReleaseGCBuffer(bForce);
-#endif
 	}
 
 public:

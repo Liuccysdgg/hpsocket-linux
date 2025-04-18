@@ -53,7 +53,7 @@ BOOL SetCurrentWorkerThreadName()
 
 BOOL SetWorkerThreadDefaultName(THR_ID tid)
 {
-	static volatile UINT _s_uiSeq = MAXUINT;
+	static volatile UINT _s_uiSeq = 0;
 
 	return ::SetSequenceThreadName(tid, DEFAULT_WORKER_THREAD_PREFIX, _s_uiSeq);
 }
@@ -77,7 +77,6 @@ LPCTSTR GetSocketErrorDesc(EnSocketError enCode)
 	case SE_NETWORK:				return _T("Network Error");
 	case SE_DATA_PROC:				return _T("Process Data Error");
 	case SE_DATA_SEND:				return _T("Send Data Fail");
-	case SE_GC_START:				return _T("Start GC Fail");
 
 	case SE_SSL_ENV_NOT_READY:		return _T("SSL environment not ready");
 
@@ -354,10 +353,10 @@ BOOL FreeHostIPAddresses(LPTIPAddr* lppIPAddr)
 
 BOOL sockaddr_IN_2_A(const HP_SOCKADDR& addr, ADDRESS_FAMILY& usFamily, LPTSTR lpszAddress, int& iAddressLen, USHORT& usPort)
 {
-	BOOL isOK = FALSE;
+	BOOL isOK	= FALSE;
 
-	usFamily  = addr.family;
-	usPort	  = addr.Port();
+	usFamily	= addr.family;
+	usPort		= addr.Port();
 
 	if(::InetNtop(addr.family, addr.SinAddr(), lpszAddress, iAddressLen))
 	{
@@ -445,36 +444,6 @@ BOOL SetMultiCastSocketOptions(SOCKET sock, const HP_SOCKADDR& bindAddr, const H
 	}
 
 	return TRUE;
-}
-
-int WaitForSocketWrite(SOCKET sock, DWORD dwTimeout)
-{
-	timeval tv = {(__time_t)(dwTimeout / 1000), (__suseconds_t)((dwTimeout % 1000) * 1000)};
-
-	fd_set wfds, efds;
-	FD_ZERO(&wfds);
-	FD_ZERO(&efds);
-	FD_SET(sock, &wfds);
-	FD_SET(sock, &efds);
-
-	int rs = NO_EINTR_INT(select(sock + 1, nullptr, &wfds, &efds, &tv));
-
-	if(rs <= 0) return ((rs == 0) ? ERROR_TIMEOUT : ENSURE_ERROR(ERROR_CANT_WAIT));
-	
-	if(FD_ISSET(sock, &efds))
-	{
-		rs = SSO_GetError(sock);
-		return ((rs != NO_ERROR && rs != SOCKET_ERROR) ? rs : ENSURE_ERROR(ERROR_CANT_WAIT));
-	}
-
-	VERIFY(FD_ISSET(sock, &wfds));
-
-	rs = SSO_GetError(sock);
-
-	if(!IS_NO_ERROR(rs))
-		return ((rs != SOCKET_ERROR) ? rs : ENSURE_ERROR(ERROR_CANT_WAIT));
-
-	return NO_ERROR;
 }
 
 ULONGLONG NToH64(ULONGLONG value)
@@ -642,7 +611,7 @@ int SSO_ReuseAddress(SOCKET sock, EnReuseAddressPolicy opt)
 
 	BOOL bReusePortSupported =
 #if defined(__linux) || defined(__linux__)
-		::IsKernelVersionAbove(2, 6, 32);
+		::IsKernelVersionAbove(3, 9, 0);
 #elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__APPLE__) || defined(__MACH__)
 		TRUE;
 #else

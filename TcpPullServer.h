@@ -125,15 +125,6 @@ protected:
 		m_bfPool.Prepare();
 	}
 
-	virtual void ReleaseGCSocketObj(BOOL bForce = FALSE)
-	{
-		__super::ReleaseGCSocketObj(bForce);
-
-#ifdef USE_EXTERNAL_GC
-		m_bfPool.ReleaseGCBuffer(bForce);
-#endif
-	}
-
 private:
 	void ReleaseConnectionExtra(TSocketObj* pSocketObj)
 	{

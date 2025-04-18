@@ -1168,9 +1168,8 @@ void CSSLSessionPool::PutFreeSession(CSSLSession* pSession)
 {
 	if(pSession->Reset())
 	{
-#ifndef USE_EXTERNAL_GC
 		ReleaseGCSession();
-#endif
+
 		if(!m_lsFreeSession.TryPut(pSession))
 			m_lsGCSession.PushBack(pSession);
 	}

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "hpsocket/GlobalDef.h"
+#include "../hpsocket/GlobalDef.h"
 #include "Singleton.h"
 #include "STLHelper.h"
 #include "RingBuffer.h"
@@ -800,6 +800,7 @@ public:
 	void		Prepare			();
 	void		Clear			();
 
+private:
 	void ReleaseGCBuffer	(BOOL bForce = FALSE);
 
 public:

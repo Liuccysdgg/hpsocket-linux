@@ -62,8 +62,6 @@
 #define DEFAULT_CLIENT_FREE_BUFFER_POOL_SIZE	60
 /* Client 默认内存块缓存池回收阀值 */
 #define DEFAULT_CLIENT_FREE_BUFFER_POOL_HOLD	60
-/* Client/Agent 默认同步连接超时时间 */
-#define DEFAULT_SYNC_CONNECT_TIMEOUT			10000
 /* IPv4 默认绑定地址 */
 #define  DEFAULT_IPV4_BIND_ADDRESS				_T("0.0.0.0")
 /* IPv6 默认绑定地址 */
@@ -106,9 +104,6 @@
 
 /* 默认压缩/解压数据缓冲器长度 */
 #define DEFAULT_COMPRESS_BUFFER_SIZE			(16 * 1024)
-
-/* 垃圾回收检查间隔（毫秒） */
-#define GC_CHECK_INTERVAL						(15 * 1000)
 
 #define HOST_SEPARATOR_CHAR						'^'
 #define PORT_SEPARATOR_CHAR						':'

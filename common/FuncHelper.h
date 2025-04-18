@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include "hpsocket/GlobalDef.h"
-#include "hpsocket/GlobalErrno.h"
+#include "../hpsocket/GlobalDef.h"
+#include "../hpsocket/GlobalErrno.h"
 #include "SysHelper.h"
 
 #include <stdlib.h>
@@ -102,7 +102,7 @@ using namespace std;
 #define IS_OK(rs)						((BOOL)(rs))
 #define IS_NOT_OK(rs)					(!IS_OK(rs))
 
-#define IS_ERROR(code)					(::GetLastError() == (code))
+#define IS_ERROR(code)					(::GetLastError() == code)
 #define CONTINUE_IF_ERROR(code)			{if(IS_ERROR(code)) continue;}
 #define BREAK_IF_ERROR(code)			{if(IS_ERROR(code)) break;}
 
@@ -133,7 +133,7 @@ inline void PrintError(LPCSTR subject)	{perror(subject);}
 #define EXECUTE_RESTORE_ERROR(expr)		{int __le_ = ::GetLastError(); (expr); ::SetLastError(__le_);}
 #define EXECUTE_RESTORE_ERROR_RT(T, expr)\
 										({int __le_ = ::GetLastError(); T __rs_ = (expr); ::SetLastError(__le_); __rs_;})
-#define ENSURE_ERROR(def_code)			({int __le_ = ::GetLastError(); if(__le_ == NO_ERROR) __le_ = (def_code);  __le_;})
+#define ENSURE_ERROR(def_code)			({int __le_ = ::GetLastError(); if(__le_ == 0) __le_ = (def_code);  __le_;})
 #define ENSURE_ERROR_CANCELLED			ENSURE_ERROR(ERROR_CANCELLED)
 #define TRIGGER(expr)					EXECUTE_RESET_ERROR((expr))
 
@@ -170,9 +170,6 @@ inline void PrintError(LPCSTR subject)	{perror(subject);}
 
 #define TO_PVOID(v)						((PVOID)(UINT_PTR)(v))
 #define FROM_PVOID(T, pv)				((T)(UINT_PTR)(pv))
-
-#define IS_NULL(v)						((v) == nullptr)
-#define IS_NOT_NULL(v)					(!IS_NULL(v))
 
 #define stricmp							strcasecmp
 #define strnicmp						strncasecmp

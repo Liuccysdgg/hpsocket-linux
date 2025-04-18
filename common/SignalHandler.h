@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "hpsocket/GlobalDef.h"
+#include "../hpsocket/GlobalDef.h"
 #include "Thread.h"
 
 #include <signal.h>

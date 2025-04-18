@@ -31,9 +31,8 @@
 
 class CUdpServer : public IUdpServer, private CIOHandler
 {
-	using CWorkerThread	 = CThread<CUdpServer, VOID, UINT>;
-	using CSendQueue	 = CCASSimpleQueue<CONNID>;
-	using CSendQueuesPtr = unique_ptr<CSendQueue[]>;
+	using CWorkerThread	= CThread<CUdpServer, VOID, UINT>;
+	using CSendQueue	= CCASSimpleQueue<CONNID>;
 
 public:
 	virtual BOOL Start	(LPCTSTR lpszBindAddress, USHORT usPort);
@@ -62,25 +61,25 @@ public:
 	virtual LPCTSTR GetLastErrorDesc	()	{return ::GetSocketErrorDesc(m_enLastError);}
 
 private:
-	virtual BOOL OnBeforeProcessIo(const TDispContext* pContext, PVOID pv, UINT events)			override;
-	virtual VOID OnAfterProcessIo(const TDispContext* pContext, PVOID pv, UINT events, BOOL rs)	override;
-	virtual VOID OnCommand(const TDispContext* pContext, TDispCommand* pCmd)					override;
-	virtual BOOL OnReadyRead(const TDispContext* pContext, PVOID pv, UINT events)				override;
-	virtual BOOL OnReadyWrite(const TDispContext* pContext, PVOID pv, UINT events)				override;
-	virtual BOOL OnHungUp(const TDispContext* pContext, PVOID pv, UINT events)					override;
-	virtual BOOL OnError(const TDispContext* pContext, PVOID pv, UINT events)					override;
-	virtual VOID OnDispatchThreadStart(THR_ID tid)												override;
-	virtual VOID OnDispatchThreadEnd(THR_ID tid)												override;
+	virtual BOOL OnBeforeProcessIo(PVOID pv, UINT events)			override;
+	virtual VOID OnAfterProcessIo(PVOID pv, UINT events, BOOL rs)	override;
+	virtual VOID OnCommand(TDispCommand* pCmd)						override;
+	virtual BOOL OnReadyRead(PVOID pv, UINT events)					override;
+	virtual BOOL OnReadyWrite(PVOID pv, UINT events)				override;
+	virtual BOOL OnHungUp(PVOID pv, UINT events)					override;
+	virtual BOOL OnError(PVOID pv, UINT events)						override;
+	virtual VOID OnDispatchThreadStart(THR_ID tid)					override;
+	virtual VOID OnDispatchThreadEnd(THR_ID tid)					override;
 
 public:
-	virtual BOOL IsSecure					() {return FALSE;}
+	virtual BOOL IsSecure				() {return FALSE;}
 
 	virtual BOOL SetConnectionExtra(CONNID dwConnID, PVOID pExtra);
 	virtual BOOL GetConnectionExtra(CONNID dwConnID, PVOID* ppExtra);
 
-	virtual void SetReuseAddressPolicy		(EnReuseAddressPolicy enReusePolicy)	{ENSURE_HAS_STOPPED(); ASSERT(m_enReusePolicy == enReusePolicy);}
-	virtual void SetSendPolicy				(EnSendPolicy enSendPolicy)				{ENSURE_HAS_STOPPED(); ASSERT(m_enSendPolicy == enSendPolicy);}
-	virtual void SetOnSendSyncPolicy		(EnOnSendSyncPolicy enOnSendSyncPolicy)	{ENSURE_HAS_STOPPED(); ASSERT(m_enOnSendSyncPolicy == enOnSendSyncPolicy);}
+	virtual void SetReuseAddressPolicy		(EnReuseAddressPolicy enReusePolicy)	{ENSURE_HAS_STOPPED(); m_enReusePolicy		= enReusePolicy;}
+	virtual void SetSendPolicy				(EnSendPolicy enSendPolicy)				{ENSURE_HAS_STOPPED(); m_enSendPolicy		= enSendPolicy;}
+	virtual void SetOnSendSyncPolicy		(EnOnSendSyncPolicy enOnSendSyncPolicy)	{ENSURE_HAS_STOPPED(); m_enOnSendSyncPolicy	= enOnSendSyncPolicy;}
 	virtual void SetMaxConnectionCount		(DWORD dwMaxConnectionCount)	{ENSURE_HAS_STOPPED(); m_dwMaxConnectionCount		= dwMaxConnectionCount;}
 	virtual void SetWorkerThreadCount		(DWORD dwWorkerThreadCount)		{ENSURE_HAS_STOPPED(); m_dwWorkerThreadCount		= dwWorkerThreadCount;}
 	virtual void SetFreeSocketObjLockTime	(DWORD dwFreeSocketObjLockTime)	{ENSURE_HAS_STOPPED(); m_dwFreeSocketObjLockTime	= dwFreeSocketObjLockTime;}
@@ -154,10 +153,8 @@ protected:
 	virtual void PrepareStart();
 	virtual void Reset();
 
-	virtual void OnWorkerThreadStart(THR_ID tid)	{}
-	virtual void OnWorkerThreadEnd(THR_ID tid)		{}
-
-	virtual void ReleaseGCSocketObj(BOOL bForce = FALSE);
+	virtual void OnWorkerThreadStart(THR_ID tid) {}
+	virtual void OnWorkerThreadEnd(THR_ID tid) {}
 
 	TUdpSocketObj*	FindSocketObj(CONNID dwConnID);
 	int				SendInternal(TUdpSocketObj* pSocketObj, TItemPtr& itPtr);
@@ -189,7 +186,6 @@ private:
 	void WaitForClientSocketClose();
 	void ReleaseClientSocket();
 	void ReleaseFreeSocket();
-	void ClearSendQueues();
 	void WaitForWorkerThreadEnd();
 
 	TUdpSocketObj* GetFreeSocketObj(CONNID dwConnID);
@@ -198,36 +194,38 @@ private:
 	void AddFreeSocketObj(TUdpSocketObj* pSocketObj, EnSocketCloseFlag enFlag = SCF_NONE, EnSocketOperation enOperation = SO_UNKNOWN, int iErrorCode = 0, BOOL bNotify = TRUE);
 	void DeleteSocketObj(TUdpSocketObj* pSocketObj);
 	BOOL InvalidSocketObj(TUdpSocketObj* pSocketObj);
-	void AddClientSocketObj(int idx, CONNID dwConnID, TUdpSocketObj* pSocketObj, const HP_SOCKADDR& remoteAddr);
+	void ReleaseGCSocketObj(BOOL bForce = FALSE);
+	void AddClientSocketObj(CONNID dwConnID, TUdpSocketObj* pSocketObj, const HP_SOCKADDR& remoteAddr);
 	void CloseClientSocketObj(TUdpSocketObj* pSocketObj, EnSocketCloseFlag enFlag = SCF_NONE, EnSocketOperation enOperation = SO_UNKNOWN, int iErrorCode = 0, BOOL bNotify = TRUE);
 
 	EnHandleResult TriggerFireAccept(TUdpSocketObj* pSocketObj);
 
 private:
 	VOID HandleCmdSend		(CONNID dwConnID, int flag);
+	VOID HandleCmdReceive	(CONNID dwConnID, int flag);
 	VOID HandleCmdDisconnect(CONNID dwConnID, BOOL bForce);
 	VOID HandleCmdTimeout	(CONNID dwConnID);
 
-	CONNID HandleAccept		(const TDispContext* pContext, HP_SOCKADDR& addr);
-	BOOL HandleReceive		(const TDispContext* pContext, int flag = 0);
-	BOOL HandleSend			(const TDispContext* pContext, int flag = 0);
+	CONNID HandleAccept		(HP_SOCKADDR& addr);
+	BOOL HandleReceive		(int flag = 0);
+	BOOL HandleSend			(int flag = 0);
 	BOOL HandleClose		(TUdpSocketObj* pSocketObj, EnSocketOperation enOperation, int iErrorCode);
 	void HandleZeroBytes	(TUdpSocketObj* pSocketObj);
 
 	BOOL SendItem			(TUdpSocketObj* pSocketObj, TItem* pItem, BOOL& bBlocked);
 
 	void DetectConnection		(PVOID pv);
-	BOOL IsNeedDetectConnection	() const {return m_dwDetectAttempts > 0 && m_dwDetectInterval > 0;}
+	BOOL IsNeedDetectConnection	() {return m_dwDetectAttempts > 0 && m_dwDetectInterval > 0;}
 
 public:
 	CUdpServer(IUdpServerListener* pListener)
 	: m_pListener				(pListener)
+	, m_soListen				(INVALID_SOCKET)
 	, m_enLastError				(SE_OK)
 	, m_enState					(SS_STOPPED)
-	, m_fdGCTimer				(INVALID_FD)
 	, m_enSendPolicy			(SP_PACK)
-	, m_enOnSendSyncPolicy		(OSSP_RECEIVE)
-	, m_enReusePolicy			(RAP_ADDR_AND_PORT)
+	, m_enOnSendSyncPolicy		(OSSP_NONE)
+	, m_enReusePolicy			(RAP_ADDR_ONLY)
 	, m_dwMaxConnectionCount	(DEFAULT_CONNECTION_COUNT)
 	, m_dwWorkerThreadCount		(DEFAULT_WORKER_THREAD_COUNT)
 	, m_dwFreeSocketObjLockTime	(DEFAULT_FREE_SOCKETOBJ_LOCK_TIME)
@@ -273,17 +271,15 @@ private:
 	CSEM					m_evWait;
 
 	IUdpServerListener*		m_pListener;
-	ListenSocketsPtr		m_soListens;
+	SOCKET					m_soListen;
 	EnServiceState			m_enState;
 	EnSocketError			m_enLastError;
-
-	CReceiveBuffersPtr		m_rcBuffers;
 
 	CPrivateHeap			m_phSocket;
 
 	CSpinGuard				m_csState;
 
-	FD						m_fdGCTimer;
+	CCriSec					m_csAccept;
 
 	TUdpSocketObjPtrPool	m_bfActiveSockets;
 
@@ -293,7 +289,7 @@ private:
 	TUdpSocketObjPtrList	m_lsFreeSocket;
 	TUdpSocketObjPtrQueue	m_lsGCSocket;
 
-	CSendQueuesPtr			m_quSends;
+	CSendQueue				m_quSend;
 
 	CIODispatcher			m_ioDispatcher;
 };
